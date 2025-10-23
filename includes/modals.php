@@ -57,9 +57,10 @@
         <div class="mb-2">Price: <span id="cartModalPrice"></span></div>
         <div class="fs-5 fw-semibold">Total: <span id="cartModalTotal"></span></div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+     <div class="modal-footer justify-content-center">
+       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-danger" id="confirmAddToCartBtn">Confirm Add to Cart</button>
+        </div>
       </div>
     </div>
   </div>
