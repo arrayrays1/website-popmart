@@ -1,10 +1,10 @@
 <?php
 // database configuration
 // update these credentials to match your MySQL setup
-$host = 'localhost:3306'; //your mysql host and port
+$host = 'localhost:3307'; //your mysql host and port
 $db   = 'webpopmart_db';
 $user = 'root'; // your mysql username
-$pass = 'Awit9123_'; // your mysql password
+$pass = ''; // your mysql password
 $charset = 'utf8mb4';
 
 // PDO Connection Options
@@ -88,7 +88,7 @@ try {
     }
     
     // connect to the database
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+    $dsn = "mysql:host=$host;dbname=$db;charset=$charset;sslmode=DISABLED"; // added sslmode=DISABLED to work on Linux MySQL/MariaDB newer version
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // store PDO connection globally for backward compatibility
