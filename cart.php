@@ -56,7 +56,7 @@
             <span>Total(<?php echo (int)$cartData['count']; ?>)</span>
             <span id="grandTotal">Php <?php echo number_format((float)$cartData['subtotal'], 2); ?></span>
           </div>
-          <button class="btn btn-primary w-100">CHECK OUT</button>
+          <button class="btn btn-primary w-100" id="checkoutBtn">CHECK OUT</button>
         </div>
       </div>
     </div>
@@ -175,5 +175,23 @@
           if(r && r.success){ if(cb) cb(); } else { console.warn('Failed to update cart'); }
         });
     }
+
+    // added here to make the checkout button works
+    $(document).on('click','#checkoutBtn',function(){
+      $(this).prop('disabled', true).text('Processing...');
+      $.post('/website-popmart/db/checkout.php', {}, function(r){
+        if(typeof r === 'string'){ try{ r = JSON.parse(r); }catch(e){} }
+        if(r && r.success){
+          alert('Checkout successful! Your order has been placed.');
+          window.location.href = '/website-popmart/index.php';
+        } else {
+          alert('Checkout failed: ' + (r.message || 'Unknown error'));
+          $('#checkoutBtn').prop('disabled', false).text('CHECK OUT');
+        }
+      }, 'json').fail(function(xhr, status, error){
+        alert('Network error. Please try again.');
+        $('#checkoutBtn').prop('disabled', false).text('CHECK OUT');
+      });
+    });
   })();
 </script>

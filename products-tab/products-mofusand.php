@@ -6,7 +6,8 @@
 
   // Fetch products for this category
   $category = 'mofusand';
-  $stmt = $pdo->prepare("SELECT id, name, description, image_path, price FROM products WHERE category = ? ORDER BY id ASC");
+  // added "stock" so the actual stocks on the databse will reflect on the pop up on PRODUCTS page
+  $stmt = $pdo->prepare("SELECT id, name, description, image_path, price, stock FROM products WHERE category = ? ORDER BY id ASC");
   $stmt->execute([$category]);
   $rows = $stmt->fetchAll();
 ?>
@@ -31,7 +32,7 @@
                 <div class="card-body">
                   <h5 class="card-title-best-seller"><?php echo htmlspecialchars($row['name']); ?></h5>
                   <p class="card-text">Php <?php echo number_format((float)$row['price'], 2); ?></p>
-                  <a href="#" class="btn btn-primary w-100 add-to-cart" data-product-id="<?php echo (int)$row['id']; ?>" data-price="<?php echo (float)$row['price']; ?>" data-stock="<?php echo isset($row['stock']) ? (int)$row['stock'] : 25; ?>">Add to Cart</a>
+                  <a href="#" class="btn btn-primary w-100 add-to-cart" data-product-id="<?php echo (int)$row['id']; ?>" data-price="<?php echo (float)$row['price']; ?>" data-stock="<?php echo (int)$row['stock']; ?>">Add to Cart</a>
                 </div>
               </div>
             </div>
