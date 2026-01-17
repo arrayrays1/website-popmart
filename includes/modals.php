@@ -57,10 +57,9 @@
         <div class="mb-2">Price: <span id="cartModalPrice"></span></div>
         <div class="fs-5 fw-semibold">Total: <span id="cartModalTotal"></span></div>
       </div>
-     <div class="modal-footer justify-content-center">
-       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-danger" id="confirmAddToCartBtn">Confirm Add to Cart</button>
-        </div>
       </div>
     </div>
   </div>
@@ -84,6 +83,90 @@
     </div>
   </div>
   
+</div>
+
+<!-- PRODUCT DETAIL MODAL (with Reviews) -->
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productDetailModalLabel">Product Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-5 text-center">
+            <img id="detailModalImage" src="" alt="Product" style="max-width: 100%; height: auto;" class="mb-3">
+          </div>
+          <div class="col-md-7">
+            <h4 id="detailModalTitle" class="mb-2"></h4>
+            <div id="detailModalRating" class="mb-2">
+              <span class="text-warning" id="detailStars"></span>
+              <span class="text-muted ms-2" id="detailAvgRating"></span>
+              <span class="text-muted" id="detailTotalReviews"></span>
+            </div>
+            <p class="fs-4 fw-bold text-danger mb-2" id="detailModalPrice"></p>
+            <p class="mb-2" id="detailModalStock"></p>
+            <p class="text-muted" id="detailModalDescription"></p>
+            <button class="btn btn-danger w-100 mt-3" id="detailAddToCartBtn">Add to Cart</button>
+          </div>
+        </div>
+        
+        <hr class="my-4">
+        
+        <!-- Reviews Section -->
+        <div id="reviewsSection">
+          <h5 class="mb-3">Customer Reviews</h5>
+          
+          <!-- Reviews List -->
+          <div id="reviewsList">
+            <p class="text-muted">Loading reviews...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" id="detailModalProductId" value="">
+  <input type="hidden" id="detailModalProductStock" value="">
+</div>
+
+<!-- WRITE REVIEW MODAL -->
+<div class="modal fade" id="writeReviewModal" tabindex="-1" aria-labelledby="writeReviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="writeReviewModalLabel">Write a Review</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-center mb-3">
+            <img id="reviewModalImage" src="" alt="Product" style="width: 60px; height: 60px; object-fit: cover;" class="me-3 rounded">
+            <h6 class="mb-0" id="reviewModalProductName">Product Name</h6>
+        </div>
+        
+        <div id="submitReviewForm" class="p-1">
+            <div class="mb-3">
+              <label class="form-label">Your Rating *</label>
+              <div id="ratingStars" class="fs-4">
+                <i class="bi bi-star rating-star" data-rating="1"></i>
+                <i class="bi bi-star rating-star" data-rating="2"></i>
+                <i class="bi bi-star rating-star" data-rating="3"></i>
+                <i class="bi bi-star rating-star" data-rating="4"></i>
+                <i class="bi bi-star rating-star" data-rating="5"></i>
+              </div>
+              <input type="hidden" id="selectedRating" value="0">
+            </div>
+            <div class="mb-3">
+              <label for="reviewText" class="form-label">Your Review (optional)</label>
+              <textarea class="form-control" id="reviewText" rows="3" placeholder="Share your experience with this product..."></textarea>
+            </div>
+            <button class="btn btn-primary w-100" id="submitReviewBtn">Submit Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" id="reviewModalProductId" value="">
+  <input type="hidden" id="reviewModalOrderId" value="">
 </div>
 
 <!-- SIGNUP MODAL -->

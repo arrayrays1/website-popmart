@@ -17,7 +17,7 @@
 
 <script src="/website-popmart/js/validation.js"></script>
 <script src="/website-popmart/js/animation.js"></script>
-<script src="/website-popmart/js/auth.js"></script>
+<script src="/website-popmart/js/auth.js?v=<?php echo time(); ?>"></script>
 
   <script>
     // breadcrumb (guards to avoid errors on pages without these elements)

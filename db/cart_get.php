@@ -18,8 +18,8 @@ try {
         $cartId = $pdo->lastInsertId();
     }
 
-    // get cart items
-    $stmt = $pdo->prepare("SELECT ci.product_id, ci.quantity, ci.unit_price, p.name, p.image_path FROM cart_items ci JOIN products p ON p.id = ci.product_id WHERE ci.cart_id = ? ORDER BY ci.id DESC");
+    // get cart items with stock information
+    $stmt = $pdo->prepare("SELECT ci.product_id, ci.quantity, ci.unit_price, p.name, p.image_path, p.stock FROM cart_items ci JOIN products p ON p.id = ci.product_id WHERE ci.cart_id = ? ORDER BY ci.id DESC");
     $stmt->execute([$cartId]);
     $rows = $stmt->fetchAll();
 

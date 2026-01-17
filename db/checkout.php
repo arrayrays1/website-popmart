@@ -7,8 +7,23 @@ require_once __DIR__ . '/db_connect.php';
 
 $userId = (int)$_SESSION['user_id'];
 
+$selectedItems = isset($_POST['items']) && is_array($_POST['items']) ? $_POST['items'] : [];
+$paymentMethod = isset($_POST['payment_method']) ? trim($_POST['payment_method']) : '';
+$shippingAddress = isset($_POST['shipping_address']) ? trim($_POST['shipping_address']) : '';
+
+if (empty($selectedItems)) {
+    echo json_encode(['success'=>false,'message'=>'No items selected']); exit;
+}
+
+if (empty($paymentMethod)) {
+    echo json_encode(['success'=>false,'message'=>'Payment method is required']); exit;
+}
+
+if (empty($shippingAddress)) {
+    echo json_encode(['success'=>false,'message'=>'Shipping address is required']); exit;
+}
+
 try {
-    // this will open the cart
     $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ? AND status='open' LIMIT 1");
     $stmt->execute([$userId]);
     $cartId = $stmt->fetchColumn();
@@ -17,26 +32,43 @@ try {
         echo json_encode(['success'=>false,'message'=>'No open cart found']); exit;
     }
 
-    // get the cart items with current stock based on database
-    $stmt = $pdo->prepare("
-        SELECT ci.product_id, ci.quantity, p.stock, p.name
-        FROM cart_items ci
-        JOIN products p ON p.id = ci.product_id
-        WHERE ci.cart_id = ?
-    ");
-    $stmt->execute([$cartId]);
-    $items = $stmt->fetchAll();
-
-    if (empty($items)) {
-        echo json_encode(['success'=>false,'message'=>'Cart is empty']); exit;
+    $productIds = array_column($selectedItems, 'product_id');
+    $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
+    $stmt = $pdo->prepare("SELECT id, name, price, stock FROM products WHERE id IN ($placeholders)");
+    $stmt->execute($productIds);
+    $products = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $products[$row['id']] = $row;
     }
 
-    // check how many stock are available
+    $orderItems = [];
+    $subtotal = 0.0;
     $insufficient = [];
-    foreach ($items as $item) {
-        if ($item['stock'] < $item['quantity']) {
-            $insufficient[] = $item['name'] . ' (available: ' . $item['stock'] . ', requested: ' . $item['quantity'] . ')';
+    
+    foreach ($selectedItems as $item) {
+        $productId = (int)$item['product_id'];
+        $quantity = (int)$item['quantity'];
+        
+        if (!isset($products[$productId])) {
+            $insufficient[] = 'Product ID ' . $productId . ' not found';
+            continue;
         }
+        
+        $product = $products[$productId];
+        
+        if ($product['stock'] < $quantity) {
+            $insufficient[] = $product['name'] . ' (available: ' . $product['stock'] . ', requested: ' . $quantity . ')';
+            continue;
+        }
+        
+        $itemTotal = $product['price'] * $quantity;
+        $subtotal += $itemTotal;
+        
+        $orderItems[] = [
+            'product_id' => $productId,
+            'quantity' => $quantity,
+            'unit_price' => $product['price']
+        ];
     }
 
     if (!empty($insufficient)) {
@@ -45,24 +77,49 @@ try {
         exit;
     }
 
-    // this will start the transaction
-    $pdo->beginTransaction();
-
-    // reduce the stock for each product assigned by the user
-    $updateStmt = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
-    foreach ($items as $item) {
-        $updateStmt->execute([$item['quantity'], $item['product_id']]);
+    if (empty($orderItems)) {
+        ob_end_clean();
+        echo json_encode(['success'=>false,'message'=>'No valid items to checkout']);
+        exit;
     }
 
-    // update the cart status to ordered
-    $stmt = $pdo->prepare("UPDATE carts SET status = 'ordered' WHERE id = ?");
-    $stmt->execute([$cartId]);
+    $shippingFee = 5.00;
+    $total = $subtotal + $shippingFee;
 
-    // this will commit the transaction
+    $pdo->beginTransaction();
+
+    $stmt = $pdo->prepare("
+        INSERT INTO orders (user_id, cart_id, payment_method, shipping_address, subtotal, shipping_fee, total, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'delivered')
+    ");
+    $stmt->execute([$userId, $cartId, $paymentMethod, $shippingAddress, $subtotal, $shippingFee, $total]);
+    $orderId = $pdo->lastInsertId();
+
+    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+    $updateStockStmt = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ?");
+    $removeCartItemStmt = $pdo->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ?");
+    
+    foreach ($orderItems as $item) {
+        $orderItemStmt->execute([$orderId, $item['product_id'], $item['quantity'], $item['unit_price']]);
+        
+        $updateStockStmt->execute([$item['quantity'], $item['product_id']]);
+        
+        $removeCartItemStmt->execute([$cartId, $item['product_id']]);
+    }
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM cart_items WHERE cart_id = ?");
+    $stmt->execute([$cartId]);
+    $remainingItems = $stmt->fetchColumn();
+    
+    if ($remainingItems == 0) {
+        $stmt = $pdo->prepare("UPDATE carts SET status = 'ordered' WHERE id = ?");
+        $stmt->execute([$cartId]);
+    }
+
     $pdo->commit();
 
     ob_end_clean();
-    echo json_encode(['success'=>true,'message'=>'Checkout successful']);
+    echo json_encode(['success'=>true,'message'=>'Order placed successfully', 'order_id' => $orderId]);
 
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {

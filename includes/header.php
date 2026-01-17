@@ -52,6 +52,7 @@
                             <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($_SESSION['first_name']); ?>
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/website-popmart/orders.php"><i class="bi bi-bag"></i> My Orders</a></li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
                         </ul>
                     </div>
