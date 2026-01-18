@@ -19,7 +19,26 @@ $productId = (int)$_POST['product_id'];
 $qty = isset($_POST['quantity']) ? max(1, (int)$_POST['quantity']) : 1;
 
 try {
-    // get or create open cart
+    // Read product price and stock
+    $stmt = $pdo->prepare("SELECT price, stock FROM products WHERE id = ? LIMIT 1");
+    $stmt->execute([$productId]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$product) {
+        echo json_encode(['success'=>false,'message'=>'Product not found']);
+        exit;
+    }
+    
+    $unitPrice = $product['price'];
+    $stock = (int)$product['stock'];
+    
+    // Check if product is out of stock
+    if ($stock <= 0) {
+        echo json_encode(['success'=>false,'message'=>'Sorry, this product is out of stock']);
+        exit;
+    }
+    
+    // Get or create open cart
     $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ? AND status = 'open' LIMIT 1");
     $stmt->execute([$userId]);
     $cartId = $stmt->fetchColumn();
@@ -29,23 +48,29 @@ try {
         $stmt->execute([$userId]);
         $cartId = $pdo->lastInsertId();
     }
-
-    // read product price
-    $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ? LIMIT 1");
-    $stmt->execute([$productId]);
-    $unitPrice = $stmt->fetchColumn();
     
-    if (!$unitPrice) {
-        echo json_encode(['success'=>false,'message'=>'Product not found']);
-        exit;
+    // Check current quantity in cart
+    $stmt = $pdo->prepare("SELECT quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
+    $stmt->execute([$cartId, $productId]);
+    $currentQty = (int)$stmt->fetchColumn();
+    
+    // Check if adding would exceed stock
+    $newTotal = $currentQty + $qty;
+    if ($newTotal > $stock) {
+        $canAdd = $stock - $currentQty;
+        if ($canAdd <= 0) {
+            echo json_encode(['success'=>false,'message'=>'You already have the maximum available quantity in your cart']);
+            exit;
+        }
+        $qty = $canAdd; // Adjust to maximum available
     }
 
-    // upsert cart item
+    // Upsert cart item
     $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity), unit_price = VALUES(unit_price)");
     $success = $stmt->execute([$cartId, $productId, $qty, $unitPrice]);
     
     if ($success) {
-        echo json_encode(['success'=>true]);
+        echo json_encode(['success'=>true,'message'=>'Added to cart']);
     } else {
         echo json_encode(['success'=>false,'message'=>'DB error']);
     }

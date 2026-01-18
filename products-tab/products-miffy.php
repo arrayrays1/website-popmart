@@ -24,14 +24,24 @@
       <h1 id="product-title" class="text-center mb-4 custom-h1-product-title">MIFFY</h1>
       <div class="row g-4">
         <?php if ($rows && count($rows) > 0): ?>
-          <?php foreach ($rows as $row): ?>
+          <?php foreach ($rows as $row): 
+            $isOutOfStock = (int)$row['stock'] <= 0;
+          ?>
             <div class="col-md-3">
-              <div class="card h-100">
-                <img src="<?php echo htmlspecialchars($row['image_path']); ?>" class="card-img-top" alt="Product Image">
+              <div class="card h-100 position-relative">
+                <?php if ($isOutOfStock): ?>
+                  <span class="position-absolute top-0 end-0 badge bg-danger m-2">Out of Stock</span>
+                <?php endif; ?>
+                <img src="<?php echo htmlspecialchars($row['image_path']); ?>" class="card-img-top <?php echo $isOutOfStock ? 'opacity-50' : ''; ?>" alt="Product Image">
                 <div class="card-body">
                   <h5 class="card-title-best-seller"><?php echo htmlspecialchars($row['name']); ?></h5>
                   <p class="card-text">Php <?php echo number_format((float)$row['price'], 2); ?></p>
-                  <a href="#" class="btn btn-primary w-100 add-to-cart" data-product-id="<?php echo (int)$row['id']; ?>" data-price="<?php echo (float)$row['price']; ?>" data-stock="<?php echo (int)$row['stock']; ?>">Add to Cart</a>
+                  <a href="#" class="btn btn-outline-secondary w-100 mb-2 view-product" data-product-id="<?php echo (int)$row['id']; ?>" data-stock="<?php echo (int)$row['stock']; ?>" data-description="<?php echo htmlspecialchars($row['description']); ?>">View Details</a>
+                  <?php if ($isOutOfStock): ?>
+                    <button class="btn btn-secondary w-100" disabled>Out of Stock</button>
+                  <?php else: ?>
+                    <a href="#" class="btn btn-primary w-100 add-to-cart" data-product-id="<?php echo (int)$row['id']; ?>" data-price="<?php echo (float)$row['price']; ?>" data-stock="<?php echo (int)$row['stock']; ?>">Add to Cart</a>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>

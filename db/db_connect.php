@@ -76,7 +76,7 @@ function createInstallMarker($marker_file) {
 try {
     // checks if database has been initialized
     if (!file_exists($install_marker)) {
-        echo "<!-- PopMart: Initializing database for first time... -->\n";
+        // echo "<!-- PopMart: Initializing database for first time... -->\n";
         
         // initialize the database
         initializeDatabase($host, $user, $pass, $init_sql_file);
@@ -84,7 +84,7 @@ try {
         // create marker file to prevent re-initialization
         createInstallMarker($install_marker);
         
-        echo "<!-- PopMart: Database initialization completed successfully -->\n";
+        // echo "<!-- PopMart: Database initialization completed successfully -->\n";
     }
     
     // connect to the database
@@ -140,6 +140,5 @@ try {
 
 // success message for development (remove in production)
 if (isset($_GET['debug']) && $_GET['debug'] === 'db') {
-    echo "<!-- PopMart: Database connected successfully -->\n";
+    // echo "<!-- PopMart: Database connected successfully -->\n";
 }
-?>
