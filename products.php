@@ -2,82 +2,51 @@
   $activePage = 'products';
   include 'includes/header.php';
   include 'includes/modals.php';
+  include_once __DIR__ . '/db/db_connect.php';
+
+  $series = [];
+  try {
+    $rows = $pdo->query("SELECT id, name, image_path FROM series ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $r) {
+      $img = $r['image_path'];
+      if (!$img) {
+        $stmt = $pdo->prepare("SELECT image_path FROM products WHERE series_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$r['id']]);
+        $img = $stmt->fetchColumn();
+      }
+      $series[] = [
+        'id'    => (int)$r['id'],
+        'name'  => $r['name'],
+        'image' => $img ?: 'img/products-img-banner/' . strtolower(str_replace(' ','-', $r['name'])) . '.png'
+      ];
+    }
+  } catch (PDOException $e) { /* ignore */ }
 ?>
-<!-- ================= PRODUCTS SECTION ================= -->
-  <section class="py-5 custom-products">
-    <div class="container">
-      <h1 class="text-center mb-4 custom-h1-products">PRODUCTS</h1>
-
-      <div class="row justify-content-center">
-
-        <!-- product 1 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/smiski.png" alt="Product 1" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">SMISKI</p>
+<section class="py-5 custom-products">
+  <div class="container">
+    <h1 class="text-center mb-4 custom-h1-products">PRODUCTS</h1>
+    <div class="row justify-content-center g-4">
+      <?php if (!empty($series)): ?>
+        <?php foreach ($series as $s): 
+          $label = strtoupper($s['name']);
+          $url   = 'products-tab/products-series.php?series_id=' . $s['id'];
+        ?>
+          <div class="col-md-4">
+            <div class="custom-card">
+              <img src="<?php echo htmlspecialchars($s['image']); ?>" alt="<?php echo htmlspecialchars($label); ?>" class="custom-card-img">
+              <div class="custom-card-details">
+                <p class="text-title"><?php echo htmlspecialchars($label); ?></p>
+              </div>
+              <button class="custom-card-button" onclick="window.location.href='<?php echo $url; ?>'">View</button>
             </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-smiski.php'">View</button>
           </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div class="col-12">
+          <div class="alert alert-info">No series found yet. Please add one in Admin &gt; Series.</div>
         </div>
-
-        <!-- product 2 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/mofusand.png" alt="Product 2" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">MOFUSAND</p>
-            </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-mofusand.php'">View</button>
-          </div>
-        </div>
-
-        <!-- product 3 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/sonny-angel.png" alt="Product 3" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">SONNY ANGEL</p>
-            </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-sAngel.php'">View</button>
-          </div>
-        </div>
-
-        <!-- product 4 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/miffy.png" alt="Product 4" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">MIFFY</p>
-            </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-miffy.php'">View</button>
-          </div>
-        </div>
-
-        <!-- product 5 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/hirono.png" alt="Product 5" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">HIRONO</p>
-            </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-hirono.php'">View</button>
-          </div>
-        </div>
-
-        <!-- product 6 -->
-        <div class="col-md-4">
-          <div class="custom-card">
-            <img src="img/products-img-banner/crybaby.png" alt="Product 6" class="custom-card-img">
-            <div class="custom-card-details">
-              <p class="text-title">CRYBABY</p>
-            </div>
-            <button class="custom-card-button" onclick="window.location.href='products-tab/products-crybaby.php'">View</button>
-          </div>
-        </div>
-
-      </div>
+      <?php endif; ?>
     </div>
-  </section>
-
+  </div>
+</section>
 <?php include 'includes/footer.php'; ?>

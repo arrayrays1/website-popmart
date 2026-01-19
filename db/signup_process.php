@@ -7,10 +7,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $email = $_POST['signupEmail'];
   $contact = $_POST['contactNumber'];
   $password = password_hash($_POST['signupPassword'], PASSWORD_DEFAULT);
+  // determine role by email rule: ends with "admin@popmart.com"
+  $isAdmin = (bool)preg_match('/admin@popmart\.com$/i', $email);
+  $role = $isAdmin ? 'admin' : 'customer';
 
   try {
-    $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, contact_number, password) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$firstName, $lastName, $email, $contact, $password]);
+    $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, contact_number, password, role) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$firstName, $lastName, $email, $contact, $password, $role]);
     echo "success";
   } catch (PDOException $e) {
     if (str_contains($e->getMessage(), 'Duplicate entry')) {

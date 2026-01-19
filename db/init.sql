@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    role ENUM('admin','customer') NOT NULL DEFAULT 'customer',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -72,7 +73,7 @@ CREATE TABLE IF NOT EXISTS orders (
     subtotal DECIMAL(10,2) NOT NULL,
     shipping_fee DECIMAL(10,2) NOT NULL DEFAULT 5.00,
     total DECIMAL(10,2) NOT NULL,
-    status ENUM('pending','confirmed','shipped','delivered','cancelled') DEFAULT 'pending',
+    status ENUM('Pending','To Ship','To Deliver','Completed') DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

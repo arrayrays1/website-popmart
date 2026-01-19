@@ -90,7 +90,7 @@ try {
 
     $stmt = $pdo->prepare("
         INSERT INTO orders (user_id, cart_id, payment_method, shipping_address, subtotal, shipping_fee, total, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'delivered')
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
     ");
     $stmt->execute([$userId, $cartId, $paymentMethod, $shippingAddress, $subtotal, $shippingFee, $total]);
     $orderId = $pdo->lastInsertId();

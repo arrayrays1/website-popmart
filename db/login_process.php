@@ -16,7 +16,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $_SESSION['first_name'] = $user['first_name'];
       $_SESSION['last_name'] = $user['last_name'];
       $_SESSION['email'] = $user['email'];
-      echo "success";
+      // determine admin by email suffix rule
+      $isAdmin = (bool)preg_match('/admin@popmart\.com$/i', $user['email']);
+      $_SESSION['role'] = $isAdmin ? 'admin' : 'customer';
+      echo $isAdmin ? "success_admin" : "success_customer";
     } else {
       echo "invalid_password";
     }

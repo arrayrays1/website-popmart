@@ -277,19 +277,22 @@ $(function () {
         type: "POST",
         url: "/website-popmart/db/login_process.php",
         data: $(form).serialize(),
-        success: function (response) {
-          const res = response.trim();
-          if (res === "success") {
-            showFeedback('loginFeedback', 'success', 'Login successful! Redirecting...');
-            setTimeout(function(){ location.reload(); }, 700);
-          } else if (res === "invalid_password") {
-            showFeedback('loginFeedback', 'danger', 'Wrong password. Please try again.');
-          } else if (res === "no_user") {
-            showFeedback('loginFeedback', 'warning', "No account yet. Please sign up to log in.");
-          } else {
-            showFeedback('loginFeedback', 'danger', 'Login failed. ' + response);
-          }
-        },
+            success: function (response) {
+              const res = response.trim();
+              if (res === "success_admin") {
+                showFeedback('loginFeedback', 'success', 'Login successful! Redirecting...');
+                setTimeout(function(){ window.location.href = "/website-popmart/admin/dashboard.php"; }, 700);
+              } else if (res === "success_customer" || res === "success") {
+                showFeedback('loginFeedback', 'success', 'Login successful! Redirecting...');
+                setTimeout(function(){ location.reload(); }, 700);
+              } else if (res === "invalid_password") {
+                showFeedback('loginFeedback', 'danger', 'Wrong password. Please try again.');
+              } else if (res === "no_user") {
+                showFeedback('loginFeedback', 'warning', "No account yet. Please sign up to log in.");
+              } else {
+                showFeedback('loginFeedback', 'danger', 'Login failed. ' + response);
+              }
+            },
         error: function (xhr, status, error) {
           showFeedback('loginFeedback', 'danger', 'Network error. Please try again.');
         }
