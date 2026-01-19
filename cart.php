@@ -3,7 +3,7 @@
   include 'includes/header.php';
   include 'includes/modals.php';
   if (!isset($_SESSION['user_id'])) {
-    echo '<div class="container my-5"><div class="alert alert-warning mt-5">Please log in to view your cart.</div></div>';
+    echo '<div class="container my-5"><div class="alert alert-warning" style="margin-top: 100px;">Please log in to view your cart.</div></div>';
     include 'includes/script.php';
     exit;
   }
