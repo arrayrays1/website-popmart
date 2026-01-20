@@ -42,7 +42,7 @@ function nextStatus($current) {
     <table class="table" style="width:100%; border-collapse: collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
       <thead>
         <tr>
-          <th>Order ID</th>
+          <th>Order #</th>
           <th>Date</th>
           <th>Customer</th>
           <th>Products</th>
@@ -54,7 +54,8 @@ function nextStatus($current) {
       <tbody>
         <?php foreach ($orders as $o): $next = nextStatus($o['status']); ?>
         <tr>
-          <td>#<?php echo (int)$o['id']; ?></td>
+          <td>#<?php echo date('mdy', strtotime($o['created_at'])) . '-' . str_pad((int)$o['id'], 4, '0', STR_PAD_LEFT);
+  ?></td>
           <td><?php echo htmlspecialchars($o['created_at']); ?></td>
           <td><?php echo htmlspecialchars($o['customer']); ?></td>
           <td style="max-width:520px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($o['items']); ?></td>

@@ -15,17 +15,29 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- create series table (must be created before products)
+CREATE TABLE IF NOT EXISTS series (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NULL,
+  image_path VARCHAR(500) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_series_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- create products table for dynamic product pages (must be created before cart_items)
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
+  series_id INT NOT NULL,
   description TEXT,
   image_path VARCHAR(512) NOT NULL,
   price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  category VARCHAR(100) NOT NULL,
+  category VARCHAR(100) NULL,
   stock INT NOT NULL DEFAULT 100,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_products_series FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE RESTRICT,
   INDEX idx_category (category)
 );
 
@@ -113,9 +125,24 @@ CREATE TABLE IF NOT EXISTS reviews (
     INDEX idx_reviews_rating (rating)
 );
 
+-- Insert series data first
+INSERT IGNORE INTO series (name) VALUES
+('crybaby'),
+('hirono'),
+('miffy'),
+('mofusand'),
+('smiski');
+
 -- ================= CRYBABY =================
-INSERT INTO products (name, description, image_path, price, category, stock)
-VALUES
+INSERT INTO products (name, series_id, description, image_path, price, category, stock)
+SELECT 'CRYBABY Powerpuff Girls Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-1.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Crying for Love Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-2.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Wild but Cute Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-3.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Crying Again 1 Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-4.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Crying Parade Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-5.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Sad Club Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-6.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Crying Again 2 Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-7.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
+UNION ALL SELECT 'CRYBABY Sunset Concert Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-8.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby';
 ('CRYBABY Powerpuff Girls Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-1.png', 300.00, 'crybaby', 100),
 ('CRYBABY Crying for Love Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-2.png', 300.00, 'crybaby', 100),
 ('CRYBABY Wild but Cute Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-3.png', 300.00, 'crybaby', 100),
@@ -126,49 +153,45 @@ VALUES
 ('CRYBABY Sunset Concert Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-8.png', 300.00, 'crybaby', 100);
 
 -- ================= HIRONO =================
-INSERT INTO products (name, description, image_path, price, category, stock)
-VALUES
-('HIRONO The Other One Series', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-1.png', 500.00, 'hirono', 100),
-('HIRONO x Keith Haring Figurine', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-2.png', 999.00, 'hirono', 100),
-('HIRONO Little Mischief Series', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-3.png', 500.00, 'hirono', 100),
-('HIRONO City of Mercy Series', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-4.png', 500.00, 'hirono', 100),
-('HIRONO Echo Series', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-5.png', 500.00, 'hirono', 100),
-('HIRONO Little Prince', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-6.png', 500.00, 'hirono', 100),
-('HIRONO Mime Series', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-7.png', 500.00, 'hirono', 100),
-('HIRONO The Pianist', 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-8.png', 999.00, 'hirono', 100);
+INSERT INTO products (name, series_id, description, image_path, price, category, stock)
+SELECT 'HIRONO The Other One Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-1.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO x Keith Haring Figurine', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-2.png', 999.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO Little Mischief Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-3.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO City of Mercy Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-4.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO Echo Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-5.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO Little Prince', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-6.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO Mime Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-7.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
+UNION ALL SELECT 'HIRONO The Pianist', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-8.png', 999.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono';
 
 -- ================= MIFFY =================
-INSERT INTO products (name, description, image_path, price, category, stock)
-VALUES
-('MIFFY Doing Things Blind Box', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-1.png', 300.00, 'miffy', 100),
-('MIFFY Goes Outside Blind Box', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-2.png', 300.00, 'miffy', 100),
-('MIFFY in the Snow Blind Box', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-3.png', 300.00, 'miffy', 100),
-('MIFFY and friends Bundle of Lights', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-4.png', 499.00, 'miffy', 100),
-('MIFFY 14-inch Stuffy Plush', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-5.png', 799.00, 'miffy', 100),
-('MIFFY Bluetooth Earphones', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-6.png', 1499.00, 'miffy', 100),
-('MIFFY Silicone Storage Bag', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-7.png', 349.00, 'miffy', 100),
-('MIFFY Character Sling Bag', 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-8.png', 699.00, 'miffy', 100);
+INSERT INTO products (name, series_id, description, image_path, price, category, stock)
+SELECT 'MIFFY Doing Things Blind Box', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-1.png', 300.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY Goes Outside Blind Box', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-2.png', 300.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY in the Snow Blind Box', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-3.png', 300.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY and friends Bundle of Lights', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-4.png', 499.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY 14-inch Stuffy Plush', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-5.png', 799.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY Bluetooth Earphones', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-6.png', 1499.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY Silicone Storage Bag', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-7.png', 349.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy'
+UNION ALL SELECT 'MIFFY Character Sling Bag', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-miffy/miffy-8.png', 699.00, 'miffy', 100 FROM series s WHERE s.name = 'miffy';
 
 -- ================= MOFUSAND =================
-INSERT INTO products (name, description, image_path, price, category, stock)
-VALUES
-('MOFUSAND Pastries', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-1.png', 300.00, 'mofusand', 100),
-('MOFUSAND Journey', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-2.png', 300.00, 'mofusand', 100),
-('MOFUSAND Hippers', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-3.png', 249.00, 'mofusand', 100),
-('MOFUSAND Sharks', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-4.png', 399.00, 'mofusand', 100),
-('MOFUSAND Tempura', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-5.png', 300.00, 'mofusand', 100),
-('MOFUSAND Plushies', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-6.png', 999.00, 'mofusand', 100),
-('MOFUSAND Berry', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-7.png', 999.00, 'mofusand', 100),
-('MOFUSAND Fluffy', 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-8.png', 300.00, 'mofusand', 100);
+INSERT INTO products (name, series_id, description, image_path, price, category, stock)
+SELECT 'MOFUSAND Pastries', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-1.png', 300.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Journey', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-2.png', 300.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Hippers', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-3.png', 249.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Sharks', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-4.png', 399.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Tempura', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-5.png', 300.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Plushies', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-6.png', 999.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Berry', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-7.png', 999.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand'
+UNION ALL SELECT 'MOFUSAND Fluffy', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-mofusand/mofusand-8.png', 300.00, 'mofusand', 100 FROM series s WHERE s.name = 'mofusand';
 
 -- ================= SMISKI =================
-INSERT INTO products (name, description, image_path, price, category, stock)
-VALUES
-('SMISKI Museum Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-1.png', 300.00, 'smiski', 100),
-('SMISKI Sunday Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-2.png', 300.00, 'smiski', 100),
-('SMISKI Moving Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-3.png', 300.00, 'smiski', 100),
-('SMISKI Classic Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-4.png', 300.00, 'smiski', 100),
-('SMISKI Birthday Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-5.png', 300.00, 'smiski', 100),
-('SMISKI Hippers', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-6.png', 300.00, 'smiski', 100),
-('SMISKI Bed Series', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-7.png', 300.00, 'smiski', 100),
-('SMISKI Touch Light', 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-8.png', 300.00, 'smiski', 100);
+INSERT INTO products (name, series_id, description, image_path, price, category, stock)
+SELECT 'SMISKI Museum Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-1.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Sunday Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-2.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Moving Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-3.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Classic Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-4.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Birthday Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-5.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Hippers', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-6.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Bed Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-7.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski'
+UNION ALL SELECT 'SMISKI Touch Light', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-smiski/smiski-8.png', 300.00, 'smiski', 100 FROM series s WHERE s.name = 'smiski';

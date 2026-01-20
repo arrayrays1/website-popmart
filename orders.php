@@ -25,7 +25,7 @@
         <div class="card mb-4 shadow-sm">
           <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <div>
-              <span class="fw-bold">Order #<?php echo $order['id']; ?></span>
+              <span class="fw-bold">Order #<?php echo date("mdy", strtotime($order['created_at'])) . "-" . str_pad($order['id'], 4, "0", STR_PAD_LEFT); ?></span>
               <span class="text-muted mx-2">|</span>
               <span class="text-muted"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></span>
             </div>

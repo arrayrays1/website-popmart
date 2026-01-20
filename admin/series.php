@@ -71,13 +71,17 @@ try {
                   <td style="min-width:160px;"><?php echo htmlspecialchars($s['name']); ?></td>
                   <td class="muted" style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($s['description'] ?? ''); ?></td>
                   <td class="muted"><?php echo htmlspecialchars($s['created_at']); ?></td>
-                  <td>
+                 <td class="actions">
+                  <div class="action-wrap">
                     <a class="btn" href="/website-popmart/admin/series_edit.php?id=<?php echo (int)$s['id']; ?>">Edit</a>
-                    <form method="post" action="/website-popmart/admin/series_delete.php" onsubmit="return confirm('Delete this series?');" style="display:inline;">
+
+                    <form method="post" action="/website-popmart/admin/series_delete.php"
+                          onsubmit="return confirm('Delete this series?');" class="inline-form">
                       <input type="hidden" name="id" value="<?php echo (int)$s['id']; ?>" />
                       <button class="btn btn-danger" type="submit">Delete</button>
                     </form>
-                  </td>
+                  </div>
+                </td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
