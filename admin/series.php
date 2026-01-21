@@ -12,84 +12,146 @@ try {
 } catch (PDOException $e) { /* ignore */ }
 ?>
 <?php $activePage = 'series'; require_once __DIR__ . '/includes/header.php'; ?>
-<style>
-  .series-page { padding:20px; font-family: Arial, sans-serif; }
-  .series-page .grid { display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:start; }
-  .series-page .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:16px; }
-  .series-page table { width:100%; border-collapse: collapse; }
-  .series-page th, .series-page td { border-bottom:1px solid #e5e7eb; padding:8px; text-align:left; vertical-align:top; }
-  .series-page .btn { background:#111827; color:#fff; border:0; border-radius:8px; padding:8px 12px; cursor:pointer; }
-  .series-page .btn:hover { background:#0b0f1a; }
-  .series-page .btn-danger { background:#dc2626; }
-  .series-page .thumb { height:40px; width:auto; border-radius:6px; border:1px solid #e5e7eb; }
-  .series-page .muted { color:#6b7280; font-size:12px; }
-</style>
-  <div class="series-page">
-    <h1>Series</h1>
-    <?php if (isset($_GET['error'])): ?>
-      <div class="alert alert-danger" style="margin-bottom:12px; color:#b91c1c;"><?php echo htmlspecialchars($_GET['error']); ?></div>
-    <?php endif; ?>
-    <div class="grid">
-      <div class="card">
-        <h3>Add Series</h3>
-        <form method="post" action="/website-popmart/admin/series_save.php" enctype="multipart/form-data">
-          <div class="field" style="margin-bottom:10px;">
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" required style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:8px;" />
-          </div>
-          <div class="field" style="margin-bottom:10px;">
-            <label for="description">Description (optional)</label>
-            <textarea id="description" name="description" rows="3" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:8px;"></textarea>
-          </div>
-          <div class="field" style="margin-bottom:10px;">
-            <label for="image">Image (optional)</label>
-            <input type="file" id="image" name="image" accept="image/*" />
-          </div>
-          <?php if (isset($_GET['return'])): ?>
-            <input type="hidden" name="return" value="<?php echo htmlspecialchars($_GET['return']); ?>" />
-          <?php endif; ?>
-          <button class="btn" type="submit">Save Series</button>
-        </form>
-      </div>
-      <div class="card">
-        <h3>All Series</h3>
-        <?php if ($series && count($series) > 0): ?>
-          <table>
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Created</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($series as $s): ?>
-                <tr>
-                  <td><?php if (!empty($s['image_path'])): ?><img class="thumb" src="<?php echo htmlspecialchars($s['image_path']); ?>" alt="" /><?php endif; ?></td>
-                  <td style="min-width:160px;"><?php echo htmlspecialchars($s['name']); ?></td>
-                  <td class="muted" style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($s['description'] ?? ''); ?></td>
-                  <td class="muted"><?php echo htmlspecialchars($s['created_at']); ?></td>
-                 <td class="actions">
-                  <div class="action-wrap">
-                    <a class="btn" href="/website-popmart/admin/series_edit.php?id=<?php echo (int)$s['id']; ?>">Edit</a>
 
-                    <form method="post" action="/website-popmart/admin/series_delete.php"
-                          onsubmit="return confirm('Delete this series?');" class="inline-form">
-                      <input type="hidden" name="id" value="<?php echo (int)$s['id']; ?>" />
-                      <button class="btn btn-danger" type="submit">Delete</button>
-                    </form>
-                  </div>
-                </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        <?php else: ?>
-          <p class="muted">No series yet. Add one on the left.</p>
-        <?php endif; ?>
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1 class="page-title">Series Management</h1>
+      <p class="page-subtitle">Manage your product series and collections</p>
+    </div>
+    <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+      <span class="text-muted">Total: <?php echo count($series); ?> series</span>
+    </div>
+  </div>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+      <i class="bi bi-exclamation-triangle me-2"></i><?php echo htmlspecialchars($_GET['error']); ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show">
+      <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($_GET['success']); ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <?php endif; ?>
+
+  <div class="row g-4">
+    <!-- Add Series Form -->
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">Add New Series</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" action="/website-popmart/admin/series_save.php" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="name" class="form-label">Series Name *</label>
+              <input type="text" class="form-control" id="name" name="name" required placeholder="Enter series name">
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="3" placeholder="Optional description"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="image" class="form-label">Series Image</label>
+              <input type="file" class="form-control" id="image" name="image" accept="image/*">
+              <div class="form-text">Optional. Recommended size: 400x400px</div>
+            </div>
+            <?php if (isset($_GET['return'])): ?>
+              <input type="hidden" name="return" value="<?php echo htmlspecialchars($_GET['return']); ?>" />
+            <?php endif; ?>
+            <button type="submit" class="btn btn-success w-100">
+              Create Series
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Series List -->
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+          <h5 class="mb-0">All Series</h5>
+          <span class="badge bg-primary"><?php echo count($series); ?> total</span>
+        </div>
+        <div class="card-body p-0">
+          <?php if ($series && count($series) > 0): ?>
+            <div class="table-container">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 80px;">Image</th>
+                    <th>Series Name</th>
+                    <th>Description</th>
+                    <th>Created</th>
+                    <th class="text-center" style="width: 150px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($series as $s): ?>
+                    <tr>
+                      <td>
+                        <?php if (!empty($s['image_path'])): ?>
+                          <img src="<?php echo htmlspecialchars($s['image_path']); ?>" alt="" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                        <?php else: ?>
+                          <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-image text-muted"></i>
+                          </div>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <div class="fw-bold"><?php echo htmlspecialchars($s['name']); ?></div>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <?php echo !empty($s['description']) ? htmlspecialchars(substr($s['description'], 0, 60)) . (strlen($s['description']) > 60 ? '...' : '') : 'No description'; ?>
+                        </small>
+                      </td>
+                      <td>
+                        <small class="text-muted"><?php echo date('M d, Y', strtotime($s['created_at'])); ?></small>
+                      </td>
+                      <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                          <a class="btn btn-outline-primary" href="/website-popmart/admin/series_edit.php?id=<?php echo (int)$s['id']; ?>" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                          <button class="btn btn-outline-danger" onclick="deleteSeries(<?php echo (int)$s['id']; ?>, '<?php echo htmlspecialchars($s['name']); ?>')" title="Delete">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php else: ?>
+            <div class="text-center py-5">
+              <i class="bi bi-collection" style="font-size: 3rem; color: #dee2e6;"></i>
+              <h5 class="text-muted mt-3">No Series Yet</h5>
+              <p class="text-muted">Create your first product series to get started</p>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Delete Form (hidden) -->
+  <form id="deleteForm" method="post" action="/website-popmart/admin/series_delete.php" style="display: none;">
+    <input type="hidden" name="id" id="deleteId">
+  </form>
+
+  <script>
+  function deleteSeries(id, name) {
+    if (confirm('Are you sure you want to delete the series "' + name + '"?\n\nThis action cannot be undone and may affect associated products.')) {
+      document.getElementById('deleteId').value = id;
+      document.getElementById('deleteForm').submit();
+    }
+  }
+  </script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

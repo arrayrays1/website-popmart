@@ -31,16 +31,67 @@ function nextStatus($current) {
   $map = [
     'Pending' => 'To Ship',
     'To Ship' => 'To Deliver',
-    'To Deliver' => 'Completed'
+    'To Deliver' => 'Delivered'
   ];
   return $map[$current] ?? null;
 }
 ?>
 <?php $activePage = 'orders'; require_once __DIR__ . '/includes/header.php'; ?>
-  <h1>Orders</h1>
-  <div style="overflow:auto;">
-    <table class="table" style="width:100%; border-collapse: collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
-      <thead>
+
+<?php
+$stats = $pdo->query("SELECT status, COUNT(*) as count FROM orders GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
+$pendingCount = $stats['Pending'] ?? 0;
+$toShipCount = $stats['To Ship'] ?? 0;
+$toDeliverCount = $stats['To Deliver'] ?? 0;
+$deliveredCount = $stats['Delivered'] ?? 0;
+$totalOrders = $pendingCount + $toShipCount + $toDeliverCount + $deliveredCount;
+?>
+
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="page-title">Orders Management</h1>
+      <p class="page-subtitle">Manage and track all customer orders • Total: <?php echo $totalOrders; ?> orders</p>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h3 class="mb-0 fw-bold text-warning"><?php echo $pendingCount; ?></h3>
+          <small class="text-muted">Pending</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <h3 class="mb-0 fw-bold text-info"><?php echo $toShipCount; ?></h3>
+          <small class="text-muted">To Ship</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h3 class="mb-0 fw-bold text-primary"><?php echo $toDeliverCount; ?></h3>
+          <small class="text-muted">To Deliver</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h3 class="mb-0 fw-bold text-success"><?php echo $deliveredCount; ?></h3>
+          <small class="text-muted">Delivered</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="table-container">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
         <tr>
           <th>Order #</th>
           <th>Date</th>
@@ -48,7 +99,7 @@ function nextStatus($current) {
           <th>Products</th>
           <th>Total</th>
           <th>Status</th>
-          <th>Action</th>
+          <th class="text-center">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -58,14 +109,28 @@ function nextStatus($current) {
   ?></td>
           <td><?php echo htmlspecialchars($o['created_at']); ?></td>
           <td><?php echo htmlspecialchars($o['customer']); ?></td>
-          <td style="max-width:520px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($o['items']); ?></td>
-          <td>₱<?php echo number_format((float)$o['total'],2); ?></td>
-          <td><?php echo htmlspecialchars($o['status']); ?></td>
+          <td style="max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <small class="text-muted"><?php echo htmlspecialchars($o['items']); ?></small>
+          </td>
+          <td class="fw-bold text-success">₱<?php echo number_format((float)$o['total'],2); ?></td>
           <td>
+            <span class="badge <?php
+              switch($o['status']) {
+                case 'Pending': echo 'bg-warning text-dark'; break;
+                case 'To Ship': echo 'bg-info'; break;
+                case 'To Deliver': echo 'bg-primary'; break;
+                case 'Delivered': echo 'bg-success'; break;
+                default: echo 'bg-secondary';
+              }
+            ?>"><?php echo htmlspecialchars($o['status']); ?></span>
+          </td>
+          <td class="text-center">
             <?php if ($next): ?>
-              <button data-id="<?php echo (int)$o['id']; ?>" data-next="<?php echo htmlspecialchars($next); ?>" class="btn btn-update">Mark as <?php echo htmlspecialchars($next); ?></button>
+              <button data-id="<?php echo (int)$o['id']; ?>" data-next="<?php echo htmlspecialchars($next); ?>" class="btn btn-sm btn-outline-primary btn-update">
+                <i class="bi bi-arrow-right-circle me-1"></i><?php echo htmlspecialchars($next); ?>
+              </button>
             <?php else: ?>
-              <span>-</span>
+              <span class="badge" style="background-color: #f80000;"><i class="bi bi-check-circle"></i> Complete</span>
             <?php endif; ?>
           </td>
         </tr>
@@ -74,15 +139,15 @@ function nextStatus($current) {
     </table>
   </div>
 
-  <div class="pagination" style="margin-top:12px;">
-    <?php for($p=1;$p<=$pages;$p++): ?>
-      <?php if ($p===$page): ?>
-        <span class="current"><?php echo $p; ?></span>
-      <?php else: ?>
-        <a href="?page=<?php echo $p; ?>"><?php echo $p; ?></a>
-      <?php endif; ?>
-    <?php endfor; ?>
-  </div>
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      <?php for($p=1;$p<=$pages;$p++): ?>
+        <li class="page-item <?php echo $p===$page ? 'active' : ''; ?>">
+          <a class="page-link" href="?page=<?php echo $p; ?>"><?php echo $p; ?></a>
+        </li>
+      <?php endfor; ?>
+    </ul>
+  </nav>
 
   <script>
   document.addEventListener('click', async function(e){

@@ -12,8 +12,54 @@ function activeClass($key, $active){ return $key === $active ? ' active' : ''; }
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Pop Mart</title>
   <link rel="stylesheet" href="/website-popmart/dist/styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { 
+      padding-top: 80px; 
+      background-color: #f8f9fa;
+    }
+    .custom-navbar {
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .table-container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .btn {
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .page-title {
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+    }
+    .page-subtitle {
+      color: #6c757d;
+      font-size: 0.95rem;
+    }
+  </style>
 </head>
-<body style="padding-top: 80px;">
+<body>
   <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-light custom-navbar fixed-top">
     <div class="container">
       <a class="navbar-brand" href="/website-popmart/admin/dashboard.php">

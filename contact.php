@@ -1,7 +1,22 @@
-<?php 
+<?php
   $activePage = 'contact';
   include 'includes/header.php';
   include 'includes/modals.php';
+
+  $isLoggedIn = isset($_SESSION['user_id']);
+  $userName = '';
+  $userEmail = '';
+
+  if ($isLoggedIn) {
+    require_once 'db/db_connect.php';
+    $stmt = $pdo->prepare("SELECT first_name, last_name, email FROM users WHERE id = ?");
+    $stmt->execute([(int)$_SESSION['user_id']]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($user) {
+      $userName = $user['first_name'] . ' ' . $user['last_name'];
+      $userEmail = $user['email'];
+    }
+  }
 ?>
 
   <section class="contact-div text-center mt-5 pt-5">
@@ -16,6 +31,9 @@
       <div class="col-lg-6 text-center text-lg-start">
         <img src="img/hirono-flying.png" alt="Popmart character" class="img-fluid mb-3 contact-img" style="max-width: 350px;">
         <h2 class="fw-bold mb-3">Got questions?<br><span class="text-muted">Send us an email</span></h2>
+        <?php if ($isLoggedIn): ?>
+          <p class="text-success"><i class="bi bi-person-check"></i> You're logged in as a registered customer. Your queries will be tracked and prioritized.</p>
+        <?php endif; ?>
         <p>We’d love to hear from you! Whether you have questions, feedback, or partnership inquiries, our team is here to help.</p>
         <p>Reach out to us through our contact form or email, and we’ll get back to you as soon as possible. Your thoughts matter to us — let’s stay connected!</p>
       </div>
@@ -24,12 +42,12 @@
         <form id="contactForm" class="p-4 bg-light rounded-4 shadow-sm contact-form" novalidate>
           <div class="mt-3">
             <label for="name" class="form-label">Name</label>
-            <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name">
+            <input type="text" class="form-control" id="name" name="name" placeholder="Enter your name" value="<?php echo htmlspecialchars($userName); ?>" <?php echo $isLoggedIn ? 'readonly' : ''; ?>>
           </div>
 
           <div class="mt-3">
             <label for="email" class="form-label">Email</label>
-            <input type="text" class="form-control" id="email" name="email" placeholder="someone@email.com">
+            <input type="email" class="form-control" id="email" name="email" placeholder="someone@email.com" value="<?php echo htmlspecialchars($userEmail); ?>" <?php echo $isLoggedIn ? 'readonly' : ''; ?>>
           </div>
 
           <div class="mt-3">

@@ -6,7 +6,6 @@
 
   // Fetch products for this category
   $category = 'mofusand';
-  // added "stock" so the actual stocks on the databse will reflect on the pop up on PRODUCTS page
   $stmt = $pdo->prepare("SELECT id, name, description, image_path, price, stock FROM products WHERE category = ? ORDER BY id ASC");
   $stmt->execute([$category]);
   $rows = $stmt->fetchAll();

@@ -39,7 +39,8 @@ function saveImage($field, $destDir) {
   return '/website-popmart/uploads/series/' . $final;
 }
 
-$img = saveImage('image', __DIR__ . '/../uploads/series');
+$uploadDir = dirname(__DIR__) . '/uploads/series';
+$img = saveImage('image', $uploadDir);
 
 try {
   // enforce unique name; raise error if duplicate
