@@ -1,10 +1,10 @@
 <?php
 // database configuration
 // update these credentials to match your MySQL setup
-$host = 'localhost:3306'; //your mysql host and port
+$host = 'localhost:3307'; //your mysql host and port
 $db   = 'webpopmart_db';
 $user = 'root'; // your mysql username
-$pass = 'Awit9123_'; // your mysql password
+$pass = ''; // your mysql password
 $charset = 'utf8mb4';
 
 // PDO Connection Options
