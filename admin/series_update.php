@@ -39,7 +39,8 @@ function saveImage($field, $destDir) {
   return '/website-popmart/uploads/series/' . $final;
 }
 
-$newImg = saveImage('image', __DIR__ . '/../uploads/series');
+$uploadDir = dirname(__DIR__) . '/uploads/series';
+$newImg = saveImage('image', $uploadDir);
 
 try {
   if ($newImg) {

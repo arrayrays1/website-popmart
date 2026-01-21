@@ -6,8 +6,13 @@ $rows = $pdo->query("SELECT p.id, p.name, s.name AS series_name, p.stock, p.upda
                      FROM products p
                      JOIN series s ON s.id = p.series_id
                      ORDER BY p.name ASC")->fetchAll();
-function invStatus($q){ if($q<=0) return 'Out of Stock'; if($q<=10) return 'Low Stock'; return 'In Stock'; }
-// build restock lists
+
+function invStatus($q){ 
+  if($q<=0) return 'Out of Stock'; 
+  if($q<=10) return 'Low Stock'; 
+  return 'In Stock'; 
+}
+
 $outOf = [];
 $low = [];
 foreach ($rows as $r) {
@@ -17,132 +22,148 @@ foreach ($rows as $r) {
 }
 ?>
 <?php $activePage = 'inventory'; require_once __DIR__ . '/includes/header.php'; ?>
-  <style>
-    .inventory-page .table th, .inventory-page .table td { padding:10px; border-bottom:1px solid #e5e7eb; text-align:left; }
-    .inventory-page .badge { padding:3px 8px; border-radius:9999px; font-size:12px; display:inline-block; }
-    .inventory-page .ok { background:#e6ffe6; color:#065f46; }
-    .inventory-page .low { background:#fff7ed; color:#92400e; }
-    .inventory-page .out { background:#fee2e2; color:#991b1b; }
- .inventory-page input[type=number]{ width:70px; padding:6px; border:1px solid #e5e7eb; border-radius:8px; }
-    .inventory-page .btn { background:#111827; color:#fff; border:0; border-radius:8px; padding:6px 10px; cursor:pointer; }
-    .inventory-page .btn:hover { background:#0b0f1a; }
-  </style>
-  <div class="inventory-page" style="padding:20px 20px; font-family: Arial, sans-serif;">
-    <h1>Inventory</h1>
-    <style>
-      .inventory-page .alerts-grid { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:12px; margin:12px 0 20px; }
-      @media (max-width: 992px) {
-        .inventory-page { padding:16px !important; }
-        .inventory-page .alerts-grid { grid-template-columns: 1fr; }
-      }
-    </style>
-    <div class="alerts-grid">
-      <div style="background:#fff; border:1px solid #ebe5e5ff; border-radius:10px; padding:12px;">
-        <h3 style="margin:0 0 8px 0;">Out of Stock</h3>
-        <div>
-          <table class="table" style="width:100%; border-collapse: collapse; table-layout:fixed;">
-            <thead>
-            <tr>
-                <th style="width:70px;">ID</th>
-                <th style="width:45%;">Name</th>
-                <th style="width:25%; text-align:center;">Series</th>
-                <th style="width:90px; text-align:center;">Stock</th>
-                <th style="width:140px;">Update</th>
-            </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($outOf)): ?>
-                <tr><td colspan="5" style="padding:8px; color:#6b7280;">All good — no out of stock items.</td></tr>
-              <?php else: foreach ($outOf as $r): ?>
-                <tr>
-                  <td>#<?php echo (int)$r['id']; ?></td>
-                <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;<?php echo htmlspecialchars($r['name']); ?></td>
-                  <td>&nbsp;<?php echo htmlspecialchars($r['series_name']); ?></td>
-                  <td style="text-align:center;"><span class="badge out">0</span></td>
-                  <td>
-                    <form method="post" action="/website-popmart/admin/inventory_update.php" style="display:flex; gap:8px; align-items:center;">
-                      <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
-                      <input type="number" name="stock" min="0" step="1" value="0" />
-                      <button class="btn" type="submit">Save</button>
-                    </form>
-                  </td>
-                </tr>
-              <?php endforeach; endif; ?>
-            </tbody>
-          </table>
+
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="page-title">Inventory Management</h1>
+      <p class="page-subtitle">Monitor and manage product stock levels</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="card border-danger">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0 text-danger">Out of Stock (<?php echo count($outOf); ?>)</h5>
         </div>
-      </div>
-      <div style="background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
-        <h3 style="margin:0 0 8px 0;">Low Stock (≤ 10)</h3>
-        <div>
-        <table class="table" style="width:100%; border-collapse: collapse; table-layout:fixed;">
-            <thead>
-            <tr>
-                <th style="width:70px;">ID</th>
-                <th style="width:45%;">Name</th>
-                <th style="width:25%; text-align:center;">Series</th>
-                <th style="width:90px; text-align:center;">Stock</th>
-                <th style="width:160px;">Update</th>
-            </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($low)): ?>
-                <tr><td colspan="5" style="padding:8px; color:#6b7280;">No low stock items.</td></tr>
-              <?php else: foreach ($low as $r): ?>
-                <tr>
-                  <td>#<?php echo (int)$r['id']; ?></td>
-                  <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;<?php echo htmlspecialchars($r['name']); ?></td>
-                  <td>&nbsp;<?php echo htmlspecialchars($r['series_name']); ?></td>
-                  <td style="text-align:center;"><span class="badge low"><?php echo (int)$r['stock']; ?></span></td>
-                  <td>
-                    <form method="post" action="/website-popmart/admin/inventory_update.php" style="display:flex; gap:8px; align-items:center;">
-                      <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
-                      <input type="number" name="stock" min="0" step="1" value="<?php echo (int)$r['stock']; ?>" />
-                      <button class="btn" type="submit">Save</button>
-                    </form>
-                  </td>
-                </tr>
-              <?php endforeach; endif; ?>
-            </tbody>
-          </table>
+        <div class="card-body">
+          <?php if (empty($outOf)): ?>
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+              <p class="mt-2 mb-0">All products are in stock</p>
+            </div>
+          <?php else: ?>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:60px;">ID</th>
+                    <th>Product Name</th>
+                    <th style="width:120px;">Series</th>
+                    <th style="width:180px;">Restock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($outOf as $r): ?>
+                    <tr>
+                      <td><small style="color: #f80000;">#<?php echo (int)$r['id']; ?></small></td>
+                      <td><?php echo htmlspecialchars($r['name']); ?></td>
+                      <td><small><?php echo htmlspecialchars($r['series_name']); ?></small></td>
+                      <td>
+                        <form method="post" action="/website-popmart/admin/inventory_update.php" class="d-flex gap-2">
+                          <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
+                          <input type="number" name="stock" min="1" step="1" value="50" class="form-control form-control-sm" style="width:80px;" />
+                          <button class="btn btn-sm btn-success" type="submit"><i class="bi bi-plus-circle"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
-    <div style="overflow:auto;">
-      <table class="table" style="width:100%; border-collapse: collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Series</th>
-          <th>Current Stock</th>
-          <th>Status</th>
-          <th>Update</th>
-        </tr>
-      </thead>
-      <tbody>
-      <?php foreach($rows as $r): $s=invStatus((int)$r['stock']); ?>
-        <tr>
-          <td>#<?php echo (int)$r['id']; ?></td>
-          <td><?php echo htmlspecialchars($r['name']); ?></td>
-          <td><?php echo htmlspecialchars($r['series_name']); ?></td>
-          <td><?php echo (int)$r['stock']; ?></td>
-          <td>
-            <?php if($s==='In Stock'): ?><span class="badge ok">In Stock</span><?php endif; ?>
-            <?php if($s==='Low Stock'): ?><span class="badge low">Low Stock</span><?php endif; ?>
-            <?php if($s==='Out of Stock'): ?><span class="badge out">Out of Stock</span><?php endif; ?>
-          </td>
-          <td>
-            <form method="post" action="/website-popmart/admin/inventory_update.php" style="display:flex; gap:8px; align-items:center;">
-              <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
-              <input type="number" name="stock" min="0" step="1" value="<?php echo (int)$r['stock']; ?>" />
-              <button class="btn" type="submit">Save</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
+
+    <div class="col-md-6">
+      <div class="card border-warning">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0 text-warning">Low Stock ≤10 (<?php echo count($low); ?>)</h5>
+        </div>
+        <div class="card-body">
+          <?php if (empty($low)): ?>
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+              <p class="mt-2 mb-0">No low stock items</p>
+            </div>
+          <?php else: ?>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width:60px;">ID</th>
+                    <th>Product Name</th>
+                    <th style="width:80px;" class="text-center">Stock</th>
+                    <th style="width:180px;">Update</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($low as $r): ?>
+                    <tr>
+                      <td><small class="text-muted">#<?php echo (int)$r['id']; ?></small></td>
+                      <td><?php echo htmlspecialchars($r['name']); ?></td>
+                      <td class="text-center"><span class="badge bg-warning text-dark"><?php echo (int)$r['stock']; ?></span></td>
+                      <td>
+                        <form method="post" action="/website-popmart/admin/inventory_update.php" class="d-flex gap-2">
+                          <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
+                          <input type="number" name="stock" min="0" step="1" value="<?php echo (int)$r['stock']; ?>" class="form-control form-control-sm" style="width:80px;" />
+                          <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-arrow-clockwise"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header bg-white border-0">
+      <h5 class="mb-0">All Products Inventory</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:80px;">ID</th>
+            <th>Product Name</th>
+            <th>Series</th>
+            <th class="text-center">Current Stock</th>
+            <th class="text-center">Status</th>
+            <th style="width:200px;">Update Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+        <?php foreach($rows as $r): $s=invStatus((int)$r['stock']); ?>
+          <tr>
+            <td><span class="badge" style="background-color: #f80000;">#<?php echo (int)$r['id']; ?></span></td>
+            <td><?php echo htmlspecialchars($r['name']); ?></td>
+            <td><small class="text-muted"><?php echo htmlspecialchars($r['series_name']); ?></small></td>
+            <td class="text-center fw-bold"><?php echo (int)$r['stock']; ?></td>
+            <td class="text-center">
+              <?php if($s==='In Stock'): ?><span class="badge" style="background-color: #f80000;">In Stock</span><?php endif; ?>
+              <?php if($s==='Low Stock'): ?><span class="badge bg-warning text-dark">Low Stock</span><?php endif; ?>
+              <?php if($s==='Out of Stock'): ?><span class="badge bg-danger">Out of Stock</span><?php endif; ?>
+            </td>
+            <td>
+              <form method="post" action="/website-popmart/admin/inventory_update.php" class="d-flex gap-2">
+                <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>" />
+                <input type="number" name="stock" min="0" step="1" value="<?php echo (int)$r['stock']; ?>" class="form-control form-control-sm" style="width:90px;" />
+                <button class="btn btn-sm btn-outline-primary" type="submit">
+                  <i class="bi bi-save"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
       </table>
     </div>
   </div>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

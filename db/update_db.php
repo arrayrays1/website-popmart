@@ -13,7 +13,7 @@ try {
         subtotal DECIMAL(10,2) NOT NULL,
         shipping_fee DECIMAL(10,2) NOT NULL DEFAULT 5.00,
         total DECIMAL(10,2) NOT NULL,
-        status ENUM('pending','confirmed','shipped','delivered','cancelled') DEFAULT 'pending',
+        status ENUM('Pending','To Ship','To Deliver','Delivered') DEFAULT 'Pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -21,7 +21,6 @@ try {
         INDEX idx_orders_user (user_id),
         INDEX idx_orders_status (status)
     )");
-    echo "<p>✅ Checked/Created 'orders' table</p>";
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS order_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -34,7 +33,21 @@ try {
         CONSTRAINT fk_order_items_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
         INDEX idx_order_items_order (order_id)
     )");
-    echo "<p>✅ Checked/Created 'order_items' table</p>";
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS customer_queries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        query_id VARCHAR(6) NOT NULL UNIQUE,
+        user_id INT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_registered TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        replied_at TIMESTAMP NULL DEFAULT NULL,
+        CONSTRAINT fk_customer_queries_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_customer_queries_user (user_id),
+        UNIQUE KEY uniq_query_id (query_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,28 +65,13 @@ try {
         INDEX idx_reviews_product (product_id),
         INDEX idx_reviews_rating (rating)
     )");
-    echo "<p>✅ Checked/Created 'reviews' table</p>";
 
-    $stmt = $pdo->query("SHOW INDEX FROM reviews WHERE Key_name = 'unique_user_product_review'");
-    if ($stmt->fetch()) {
-        $pdo->exec("ALTER TABLE reviews DROP INDEX unique_user_product_review");
-        echo "<p>✅ Dropped old 'unique_user_product_review' constraint</p>";
-    }
-    
-    $stmt = $pdo->query("SHOW INDEX FROM reviews WHERE Key_name = 'unique_user_order_product'");
-    if (!$stmt->fetch()) {
-        try {
-            $pdo->exec("ALTER TABLE reviews ADD UNIQUE KEY unique_user_order_product (user_id, product_id, order_id)");
-            echo "<p>✅ Added new 'unique_user_order_product' constraint</p>";
-        } catch (Exception $e) {
-            echo "<p>⚠️ Could not add new constraint (might already exist): " . $e->getMessage() . "</p>";
-        }
-    }
-
-    echo "<h3>Database update complete!</h3>";
-    echo "<p><a href='../index.php'>Go to Home</a></p>";
+    echo "<h3>✅ Database schema updated successfully!</h3>";
+    echo "<p><a href='../index.php'>Return to site</a></p>";
 
 } catch (PDOException $e) {
-    echo "<h3>Error: " . $e->getMessage() . "</h3>";
+    echo "<h3>❌ Error updating database:</h3>";
+    echo "<p>" . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
 }
 ?>

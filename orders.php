@@ -29,6 +29,17 @@
               <span class="text-muted mx-2">|</span>
               <span class="text-muted"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></span>
             </div>
+            <div>
+              <span class="badge <?php
+                switch($order['status']) {
+                  case 'Pending': echo 'bg-warning text-dark'; break;
+                  case 'To Ship': echo 'bg-info'; break;
+                  case 'To Deliver': echo 'bg-primary'; break;
+                  case 'Delivered': echo 'bg-success'; break;
+                  default: echo 'bg-secondary';
+                }
+              ?>"><?php echo htmlspecialchars($order['status']); ?></span>
+            </div>
           </div>
           <div class="card-body">
             <div class="mb-3">
@@ -52,13 +63,13 @@
                       </p>
                     </div>
                     <div>
-                      <?php if ($order['status'] !== 'cancelled'): ?>
+                      <?php if ($order['status'] === 'Delivered'): ?>
                         <?php if (!empty($item['is_reviewed'])): ?>
                             <button class="btn btn-secondary btn-sm" disabled>
                                 Reviewed <i class="bi bi-check"></i>
                             </button>
                         <?php else: ?>
-                            <button class="btn btn-outline-danger btn-sm write-review-btn" 
+                            <button class="btn btn-outline-danger btn-sm write-review-btn"
                                     data-order-id="<?php echo $order['id']; ?>"
                                     data-product-id="<?php echo $item['product_id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($item['name']); ?>"
@@ -66,6 +77,8 @@
                               Write Review
                             </button>
                         <?php endif; ?>
+                      <?php elseif ($order['status'] !== 'cancelled'): ?>
+                        <span class="text-muted small">Review available when order is delivered</span>
                       <?php endif; ?>
                     </div>
                   </div>

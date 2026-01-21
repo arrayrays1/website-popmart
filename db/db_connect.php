@@ -7,7 +7,6 @@ $user = 'root'; // your mysql username
 $pass = ''; // your mysql password
 $charset = 'utf8mb4';
 
-// PDO Connection Options
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -76,19 +75,15 @@ function createInstallMarker($marker_file) {
 try {
     // checks if database has been initialized
     if (!file_exists($install_marker)) {
-        // echo "<!-- PopMart: Initializing database for first time... -->\n";
-        
         // initialize the database
         initializeDatabase($host, $user, $pass, $init_sql_file);
-        
+
         // create marker file to prevent re-initialization
         createInstallMarker($install_marker);
-        
-        // echo "<!-- PopMart: Database initialization completed successfully -->\n";
     }
     
     // connect to the database
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset;sslmode=DISABLED"; // added sslmode=DISABLED to work on Linux MySQL/MariaDB newer version
+    $dsn = "mysql:host=$host;dbname=$db;charset=$charset;sslmode=DISABLED";
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // store PDO connection globally for backward compatibility
@@ -138,7 +133,3 @@ try {
     </div>");
 }
 
-// success message for development (remove in production)
-if (isset($_GET['debug']) && $_GET['debug'] === 'db') {
-    // echo "<!-- PopMart: Database connected successfully -->\n";
-}

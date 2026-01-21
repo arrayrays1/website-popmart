@@ -8,16 +8,15 @@ function getScalar($pdo, $sql, $params = []) {
   return $stmt->fetchColumn();
 }
 
-// metrics
-$totalSales = (float)(getScalar($pdo, "SELECT COALESCE(SUM(total),0) FROM orders WHERE status = 'Completed'"));
-$totalUsers = (int)(getScalar($pdo, "SELECT COUNT(*) FROM users"));
-$pendingCount = (int)(getScalar($pdo, "SELECT COUNT(*) FROM orders WHERE status = 'Pending'"));
-$completedCount = (int)(getScalar($pdo, "SELECT COUNT(*) FROM orders WHERE status = 'Completed'"));
+$totalSales = (float)(getScalar($pdo, "SELECT COALESCE(SUM(total),0) FROM orders WHERE status = 'Delivered'"));
+$totalUsers = (int)(getScalar($pdo, "SELECT COUNT(*) FROM users WHERE role = 'customer'"));
+$pendingCount = (int)(getScalar($pdo, "SELECT COUNT(*) FROM orders WHERE status != 'Delivered'"));
+$completedCount = (int)(getScalar($pdo, "SELECT COUNT(*) FROM orders WHERE status = 'Delivered'"));
+$totalProducts = (int)(getScalar($pdo, "SELECT COUNT(*) FROM products"));
 
-// sales last 7 days data (for sparkline; needs refinement)
 $salesRows = $pdo->query("SELECT DATE(created_at) AS d, COALESCE(SUM(total),0) AS s
                           FROM orders
-                          WHERE status='Completed' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+                          WHERE status='Delivered' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
                           GROUP BY DATE(created_at)
                           ORDER BY d ASC")->fetchAll(PDO::FETCH_KEY_PAIR);
 $sales7 = [];
@@ -27,7 +26,6 @@ for ($i = 6; $i >= 0; $i--) {
 }
 $maxBar = max($sales7) ?: 1;
 
-// pending orders (last 10)
 $sql = "
   SELECT o.id, o.user_id, o.total, o.status, o.created_at,
          CONCAT(u.first_name, ' ', u.last_name) AS customer,
@@ -36,90 +34,117 @@ $sql = "
   JOIN users u ON u.id = o.user_id
   JOIN order_items oi ON oi.order_id = o.id
   JOIN products p ON p.id = oi.product_id
-  WHERE o.status = 'Pending'
+  WHERE o.status != 'Delivered'
   GROUP BY o.id
   ORDER BY o.created_at DESC
   LIMIT 10
 ";
 $pendingOrders = $pdo->query($sql)->fetchAll();
-// recent sign-ups (last 5)
 $recentUsers = [];
 try {
   $recentUsers = $pdo->query("SELECT first_name, last_name, email, created_at FROM users ORDER BY created_at DESC LIMIT 5")->fetchAll();
 } catch (Exception $e) { /* ignore */ }
-// recent customer queries (last 5)
-$recentQueries = [];
+$latestQuery = null;
 try {
-  $recentQueries = $pdo->query("SELECT name, email, subject, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5")->fetchAll();
+  $latestQuery = $pdo->query("SELECT query_id, name, email, message, created_at FROM customer_queries ORDER BY created_at DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 } catch (Exception $e) { /* ignore */ }
 
 function nextStatus($current) {
   $map = [
     'Pending' => 'To Ship',
     'To Ship' => 'To Deliver',
-    'To Deliver' => 'Completed'
+    'To Deliver' => 'Delivered'
   ];
   return $map[$current] ?? null;
 }
+
 ?>
 <?php $activePage = 'dashboard'; require_once __DIR__ . '/includes/header.php'; ?>
-<style>
-    .metric-cards { display:flex; gap:16px; flex-wrap: wrap; margin: 16px 0; }
-    .metric-card { border:1px solid #e5e7eb; padding:12px; border-radius:10px; min-width:220px; background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .metric-title { color:#6b7280; font-size:12px; text-transform:uppercase; letter-spacing: .04em; }
-    .metric-value { font-size:22px; font-weight:800; color:#111827; }
-</style>
-    <h1>Admin Dashboard</h1>
-  <div class="metric-cards">
-    <div class="metric-card">
-      <div class="metric-title">Total Sales</div>
-      <div class="metric-value">₱<?php echo number_format($totalSales, 2); ?></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Total Users</div>
-      <div class="metric-value"><?php echo $totalUsers; ?></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Pending Orders</div>
-      <div class="metric-value"><?php echo $pendingCount; ?></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Completed Orders</div>
-      <div class="metric-value"><?php echo $completedCount; ?></div>
-    </div>
-  </div>
 
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
-    <h2 style="margin: 16px 0;">Pending Orders (last 10)</h2>
-    <a href="/website-popmart/admin/orders.php" class="btn" style="background:#111827; color:#fff; border-radius:8px; padding:8px 12px; text-decoration:none;">View Orders</a>
+<div class="row mb-4">
+  <div class="col-12">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Welcome back! Here's what's happening with your store today</p>
   </div>
-  <div style="overflow:auto;">
-    <table class="table" style="width:100%; border-collapse: collapse; background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
-      <thead>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Total Sales</h6>
+        <h3 class="mb-0 fw-bold text-success">₱<?php echo number_format($totalSales, 2); ?></h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Total Customers</h6>
+        <h3 class="mb-0 fw-bold text-primary"><?php echo $totalUsers; ?></h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Active Orders</h6>
+        <h3 class="mb-0 fw-bold text-warning"><?php echo $pendingCount; ?></h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Delivered Orders</h6>
+        <h3 class="mb-0 fw-bold text-info"><?php echo $completedCount; ?></h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Active Orders</h4>
+      <a href="/website-popmart/admin/orders.php" class="btn btn-sm" style="background-color: #f80000; color: white; border-color: #f80000;">
+        <i class="bi bi-eye me-1"></i>View All Orders
+      </a>
+    </div>
+  </div>
+  
+  <div class="table-container">
+    <table class="table table-hover">
+      <thead class="table-light">
         <tr>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Order ID</th>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Customer</th>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Products</th>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Total</th>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Status</th>
-          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Action</th>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Products</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th class="text-center">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($pendingOrders as $row): ?>
           <tr>
-            <td style="padding:8px;">#<?php echo htmlspecialchars($row['id']); ?></td>
-            <td style="padding:8px;">&nbsp;<?php echo htmlspecialchars($row['customer']); ?></td>
-            <td style="padding:8px; max-width:520px;">&nbsp;<?php echo htmlspecialchars($row['items']); ?></td>
-            <td style="padding:8px;">₱<?php echo number_format((float)$row['total'], 2); ?></td>
-            <td style="padding:8px; "><span><?php echo htmlspecialchars($row['status']); ?></span></td>
-            <td style="padding:8px;">
-              <?php $next = nextStatus($row['status']); ?>
-              <?php if ($next): ?>
-                <button data-id="<?php echo (int)$row['id']; ?>" data-next="<?php echo htmlspecialchars($next); ?>" class="btn-update" style="padding:6px 10px;">Mark as <?php echo htmlspecialchars($next); ?></button>
-              <?php else: ?>
-                <span>-</span>
-              <?php endif; ?>
+            <td><span class="badge" style="background-color: #f80000;">#<?php echo htmlspecialchars($row['id']); ?></span></td>
+            <td><?php echo htmlspecialchars($row['customer']); ?></td>
+            <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($row['items']); ?></td>
+            <td class="fw-bold text-success">₱<?php echo number_format((float)$row['total'], 2); ?></td>
+            <td>
+              <span class="badge <?php
+                switch($row['status']) {
+                  case 'Pending': echo 'bg-warning text-dark'; break;
+                  case 'To Ship': echo 'bg-info'; break;
+                  case 'To Deliver': echo 'bg-primary'; break;
+                  default: echo 'bg-secondary';
+                }
+              ?>"><?php echo htmlspecialchars($row['status']); ?></span>
+            </td>
+            <td class="text-center">
+              <a href="/website-popmart/admin/orders.php" class="btn btn-sm" style="background-color: #f80000; color: white; border-color: #f80000;">
+                <i class="bi bi-arrow-right-circle me-1"></i>Manage
+              </a>
             </td>
           </tr>
         <?php endforeach; ?>
@@ -127,91 +152,73 @@ function nextStatus($current) {
     </table>
   </div>
 
-  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:20px;">
-    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <h3 style="margin:0;">Recent Sign-ups</h3>
-        <a href="/website-popmart/admin/queries.php" style="visibility:hidden;">&nbsp;</a>
-      </div>
-      <div style="overflow:auto;">
-        <table class="table" style="width:100%; border-collapse: collapse;">
-          <thead>
+  <div class="row g-4 mt-2">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Recent Sign-ups</h5>
+        </div>
+        <div class="card-body">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
             <tr>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Name</th>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Email</th>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Joined</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Joined</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($recentUsers as $u): ?>
               <tr>
-                <td style="padding:8px;"><?php echo htmlspecialchars(($u['first_name'] ?? '').' '.($u['last_name'] ?? '')); ?></td>
-                <td style="padding:8px;"><?php echo htmlspecialchars($u['email'] ?? ''); ?></td>
-                <td style="padding:8px;"><?php echo htmlspecialchars($u['created_at'] ?? ''); ?></td>
+                <td><?php echo htmlspecialchars(($u['first_name'] ?? '').' '.($u['last_name'] ?? '')); ?></td>
+                <td><small class="text-muted"><?php echo htmlspecialchars($u['email'] ?? ''); ?></small></td>
+                <td><small><?php echo date('M d, Y', strtotime($u['created_at'] ?? 'now')); ?></small></td>
               </tr>
             <?php endforeach; ?>
             <?php if (empty($recentUsers)): ?>
-              <tr><td colspan="3" style="padding:8px; color:#6b7280;">No data</td></tr>
+              <tr><td colspan="3" class="text-center text-muted">No recent sign-ups</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
-    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <h3 style="margin:0;">Customer Queries</h3>
-        <a href="/website-popmart/admin/queries.php" class="btn" style="background:#111827; color:#fff; border-radius:8px; padding:6px 10px; text-decoration:none;">View Queries</a>
-      </div>
-      <div style="overflow:auto;">
-        <table class="table" style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">From</th>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Subject</th>
-              <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Received</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($recentQueries as $q): ?>
-              <tr>
-                <td style="padding:8px;"><?php echo htmlspecialchars(($q['name'] ?? '').' <'.($q['email'] ?? '').'>'); ?></td>
-                <td style="padding:8px; max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;<?php echo htmlspecialchars($q['subject'] ?? ''); ?></td>
-                <td style="padding:8px;">&nbsp;<?php echo htmlspecialchars($q['created_at'] ?? ''); ?></td>
-              </tr>
-            <?php endforeach; ?>
-            <?php if (empty($recentQueries)): ?>
-              <tr><td colspan="3" style="padding:8px; color:#6b7280;">No data</td></tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Latest Customer Query</h5>
+          <a href="/website-popmart/admin/queries.php" class="btn btn-sm" style="background-color: #f80000; color: white; border-color: #f80000;">
+            <i class="bi bi-eye me-1"></i>View All
+          </a>
+        </div>
+        <div class="card-body">
+        <?php if ($latestQuery): ?>
+          <div class="alert alert-light border mb-0">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="mb-1"><?php echo htmlspecialchars($latestQuery['name']); ?></h6>
+                <span class="badge" style="background-color: #f80000;"><?php echo htmlspecialchars($latestQuery['query_id']); ?></span>
+              </div>
+              <small class="text-muted">
+                <?php echo date('M d, Y H:i', strtotime($latestQuery['created_at'])); ?>
+              </small>
+            </div>
+            <p class="mb-2">
+              <i class="bi bi-envelope me-1"></i>
+              <small class="text-muted"><?php echo htmlspecialchars($latestQuery['email']); ?></small>
+            </p>
+            <p class="mb-0 text-muted">
+              <?php echo htmlspecialchars(substr($latestQuery['message'], 0, 120)) . (strlen($latestQuery['message']) > 120 ? '...' : ''); ?>
+            </p>
+          </div>
+        <?php else: ?>
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+            <p class="mt-2">No customer queries yet</p>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
 
-  <script>
-    document.addEventListener('click', async function(e) {
-      const btn = e.target.closest('.btn-update');
-      if (!btn) return;
-      const id = btn.getAttribute('data-id');
-      const next = btn.getAttribute('data-next');
-      btn.disabled = true;
-      try {
-        const res = await fetch('/website-popmart/admin/update_order_status.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ order_id: id, next_status: next })
-        });
-        const json = await res.json();
-        if (json.success) {
-          location.reload();
-        } else {
-          alert('Failed: ' + (json.message || 'Unknown error'));
-        }
-      } catch (err) {
-        alert('Network error.');
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

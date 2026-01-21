@@ -16,11 +16,10 @@ if ($orderId <= 0 || $next === '') {
   exit;
 }
 
-// allowed transitions
 $allowed = [
   'Pending' => 'To Ship',
   'To Ship' => 'To Deliver',
-  'To Deliver' => 'Completed'
+  'To Deliver' => 'Delivered'
 ];
 
 try {

@@ -106,46 +106,108 @@
 </section>
 
 <!-- ================= BEST SELLERS ================= -->
+<?php
+// Get top 3 best selling products based on actual sales data (matching admin dashboard)
+$bestSellers = [];
+try {
+  include_once __DIR__ . '/db/db_connect.php';
+  $bestSellers = $pdo->query("SELECT p.id, p.name, p.price, p.stock, p.image_path, s.name AS series_name,
+                              COALESCE(SUM(CASE WHEN o.status='Delivered' THEN oi.quantity ELSE 0 END),0) AS units_sold
+                       FROM products p
+                       JOIN series s ON s.id = p.series_id
+                       LEFT JOIN order_items oi ON oi.product_id = p.id
+                       LEFT JOIN orders o ON o.id = oi.order_id
+                       GROUP BY p.id
+                       ORDER BY units_sold DESC, p.created_at DESC
+                       LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  // Fallback to some default products if database query fails
+  $bestSellers = [
+    ['id' => 1, 'name' => 'SMISKI Museum Series', 'price' => 300.00, 'stock' => 50, 'image_path' => 'img/products-img-banner/products-smiski/smiski-1.png', 'series_name' => 'smiski'],
+    ['id' => 2, 'name' => 'HIRONO Little Mischief Series', 'price' => 500.00, 'stock' => 25, 'image_path' => 'img/products-img-banner/products-hirono/hirono-3.png', 'series_name' => 'hirono'],
+    ['id' => 3, 'name' => 'MOFUSAND Pastries', 'price' => 300.00, 'stock' => 40, 'image_path' => 'img/products-img-banner/products-mofusand/mofusand-1.png', 'series_name' => 'mofusand']
+  ];
+}
+?>
 <section class="py-5">
   <div class="container">
     <h1 class="text-center mb-4 custom-h1">【BEST SELLERS】</h1>
 
     <div class="row g-4">
-      <!-- best seller 1 -->
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="img/best-seller-1.png" class="card-img-top" alt="Product 1">
-          <div class="card-body">
-            <h5 class="card-title-best-seller">SMISKI Museum Series</h5>
-            <p class="card-text">Php 300.00</p>
-            <a href="cart.php" class="btn btn-primary w-100">Add to Cart</a>
+      <?php if (!empty($bestSellers)): ?>
+        <?php foreach ($bestSellers as $index => $product): ?>
+          <?php $isOutOfStock = (int)($product['stock'] ?? 0) <= 0; ?>
+          <div class="col-md-4">
+            <div class="card h-100 position-relative">
+              <?php if ($index < 3): ?>
+                <div class="position-absolute top-0 start-0 badge bg-warning text-dark m-2" style="z-index: 10;">
+                  #<?php echo $index + 1; ?>
+                </div>
+              <?php endif; ?>
+              <?php if ($isOutOfStock): ?>
+                <div class="position-absolute top-0 end-0 badge bg-danger m-2" style="z-index: 10;">
+                  Out of Stock
+                </div>
+              <?php endif; ?>
+              <img src="<?php echo htmlspecialchars($product['image_path'] ?? 'img/best-seller-' . ($index + 1) . '.png'); ?>"
+                   class="card-img-top <?php echo $isOutOfStock ? 'opacity-50' : ''; ?>"
+                   alt="<?php echo htmlspecialchars($product['name']); ?>"
+                   style="height: 250px; object-fit: cover;">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title-best-seller"><?php echo htmlspecialchars($product['name']); ?></h5>
+                <p class="card-text">₱<?php echo number_format((float)$product['price'], 2); ?></p>
+                <div class="mt-auto">
+                  <?php if ($isOutOfStock): ?>
+                    <button class="btn btn-secondary w-100" disabled>
+                      Out of Stock
+                    </button>
+                  <?php else: ?>
+                    <button class="btn btn-primary w-100 add-to-cart"
+                            data-product-id="<?php echo (int)$product['id']; ?>"
+                            data-price="<?php echo (float)$product['price']; ?>"
+                            data-stock="<?php echo (int)$product['stock']; ?>"
+                            data-name="<?php echo htmlspecialchars($product['name']); ?>">
+                      Add to Cart
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <!-- Fallback static products if no sales data -->
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="img/best-seller-1.png" class="card-img-top" alt="Product 1">
+            <div class="card-body">
+              <h5 class="card-title-best-seller">SMISKI Museum Series</h5>
+              <p class="card-text">₱300.00</p>
+              <button class="btn btn-primary w-100" onclick="window.location.href='products-tab/products-smiski.php'">View Series</button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- best seller 2 -->
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="img/best-seller-2.png" class="card-img-top" alt="Product 2">
-          <div class="card-body">
-            <h5 class="card-title-best-seller">HIRONO Little Mischief</h5>
-            <p class="card-text">Php 500.00</p>
-            <a href="cart.php" class="btn btn-primary w-100">Add to Cart</a>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="img/best-seller-2.png" class="card-img-top" alt="Product 2">
+            <div class="card-body">
+              <h5 class="card-title-best-seller">HIRONO Little Mischief</h5>
+              <p class="card-text">₱500.00</p>
+              <button class="btn btn-primary w-100" onclick="window.location.href='products-tab/products-hirono.php'">View Series</button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- best seller 3 -->
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="img/best-seller-3.png" class="card-img-top" alt="Product 3">
-          <div class="card-body">
-            <h5 class="card-title-best-seller">MOFUSAND Dessert Series</h5>
-            <p class="card-text">Php 300.00</p>
-            <a href="cart.php" class="btn btn-primary w-100">Add to Cart</a>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="img/best-seller-3.png" class="card-img-top" alt="Product 3">
+            <div class="card-body">
+              <h5 class="card-title-best-seller">MOFUSAND Pastries</h5>
+              <p class="card-text">₱300.00</p>
+              <button class="btn btn-primary w-100" onclick="window.location.href='products-tab/products-mofusand.php'">View Series</button>
+            </div>
           </div>
         </div>
-      </div>
+      <?php endif; ?>
     </div>
   </div>
 </section>

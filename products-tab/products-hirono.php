@@ -5,7 +5,6 @@
   include_once __DIR__ . '/../db/db_connect.php';
 
   $category = 'hirono';
-  // added "stock" so the actual stocks on the databse will reflect on the pop up on PRODUCTS page
   $stmt = $pdo->prepare("SELECT id, name, description, image_path, price, stock FROM products WHERE category = ? ORDER BY id ASC");
   $stmt->execute([$category]);
   $rows = $stmt->fetchAll();
