@@ -143,15 +143,6 @@ UNION ALL SELECT 'CRYBABY Crying Parade Series', s.id, 'Description here', '/web
 UNION ALL SELECT 'CRYBABY Sad Club Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-6.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
 UNION ALL SELECT 'CRYBABY Crying Again 2 Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-7.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby'
 UNION ALL SELECT 'CRYBABY Sunset Concert Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-8.png', 300.00, 'crybaby', 100 FROM series s WHERE s.name = 'crybaby';
-('CRYBABY Powerpuff Girls Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-1.png', 300.00, 'crybaby', 100),
-('CRYBABY Crying for Love Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-2.png', 300.00, 'crybaby', 100),
-('CRYBABY Wild but Cute Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-3.png', 300.00, 'crybaby', 100),
-('CRYBABY Crying Again 1 Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-4.png', 300.00, 'crybaby', 100),
-('CRYBABY Crying Parade Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-5.png', 300.00, 'crybaby', 100),
-('CRYBABY Sad Club Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-6.png', 300.00, 'crybaby', 100),
-('CRYBABY Crying Again 2 Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-7.png', 300.00, 'crybaby', 100),
-('CRYBABY Sunset Concert Series', 'Description here', '/website-popmart/img/products-img-banner/products-crybaby/crybaby-8.png', 300.00, 'crybaby', 100);
-
 -- ================= HIRONO =================
 INSERT INTO products (name, series_id, description, image_path, price, category, stock)
 SELECT 'HIRONO The Other One Series', s.id, 'Description here', '/website-popmart/img/products-img-banner/products-hirono/hirono-1.png', 500.00, 'hirono', 100 FROM series s WHERE s.name = 'hirono'
